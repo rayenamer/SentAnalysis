@@ -133,14 +133,6 @@ Every Python service uses the same layout:
 
 ## References
 
-**Structure**
-- FastAPI best practices: https://github.com/zhanymkanov/fastapi-best-practices
-- FastAPI "Bigger Applications": https://fastapi.tiangolo.com/tutorial/bigger-applications/
-
-**Auth**
-- FastAPI OAuth2 / JWT: https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/
-- PyJWT with a JWKS client: https://pyjwt.readthedocs.io/en/stable/usage.html#retrieve-rsa-signing-keys-from-a-jwks-endpoint
-
 **ETL / ingestion**
 - PRAW: https://praw.readthedocs.io
 - GDELT: https://www.gdeltproject.org
