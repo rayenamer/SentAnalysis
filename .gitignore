@@ -1,0 +1,26 @@
+
+# Python virtual environments
+.venv/
+venv/
+.vader-test-deps/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# FinBERT and Hugging Face model cache
+.finbert-cache/
+*.onnx
+*.safetensors
+pytorch_model.bin
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Temporary files
+*.log
