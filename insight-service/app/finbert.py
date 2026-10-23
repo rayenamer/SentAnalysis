@@ -15,15 +15,12 @@ import tempfile
 import numpy as np
 
 from app.finbert_models import FinBertResponse, FinBertResult, SentimentProbabilities
+from app.inference_errors import FinBertUnavailable, ModelInitializationError
 from app.models.sentiment import AnalyzeRequest
 
 MODEL_ID = "ProsusAI/finbert"
 CPU_PROVIDER = "CPUExecutionProvider"
 LABELS = {"positive", "negative", "neutral"}
-
-
-class FinBertUnavailable(RuntimeError):
-    """Model loading or inference failed; never substitute another model."""
 
 
 @dataclass(frozen=True)
@@ -126,9 +123,14 @@ class FinBertService:
         # Serialize loading and inference to bound peak memory; prevent duplicate
         # first-load work when simultaneous requests arrive.
         with self._lock:
-            try:
-                if self._backend is None:
+            if self._backend is None:
+                try:
                     self._backend = _load_backend(self.settings)
+                except Exception as exc:
+                    # No failed initialization is cached on the shared service.
+                    # A subsequent request may make a fresh initialization attempt.
+                    raise ModelInitializationError("FinBERT initialization failed") from exc
+            try:
                 model, tokenizer, mapping = self._backend
                 results = []
                 limit = min(self.settings.max_length,

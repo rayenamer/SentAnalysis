@@ -1,11 +1,13 @@
 
 from fastapi import FastAPI
 from app.models.sentiment import AnalyzeRequest
+from app.validation_errors import install_validation_error_handler
 
 app = FastAPI(
     title="SentAnalysis - Insight Service",
     version="0.1.0"
 )
+install_validation_error_handler(app)
 
 
 @app.get("/health")

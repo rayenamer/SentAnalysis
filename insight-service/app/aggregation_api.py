@@ -9,6 +9,7 @@ This module imports no VADER, FinBERT, model weights, or database clients.
 """
 
 from fastapi import APIRouter, FastAPI
+from app.validation_errors import install_validation_error_handler
 
 from app.aggregation import aggregate_sentiments
 from app.aggregation_models import AggregationRequest, AggregationResponse
@@ -22,4 +23,5 @@ def aggregate(request: AggregationRequest) -> AggregationResponse:
 
 
 app = FastAPI(title="SentAnalysis - Sentiment Aggregation", version="0.1.0")
+install_validation_error_handler(app)
 app.include_router(router)

@@ -11,6 +11,7 @@ from typing import Annotated, Literal
 from pydantic import AwareDatetime, BaseModel, Field, field_validator, model_validator
 
 from app.models.sentiment import SentimentResult
+from app.datetime_utils import normalize_utc
 
 Window = Literal["1h", "24h", "7d"]
 ScoringModel = Literal["vader", "finbert"]
@@ -35,7 +36,7 @@ class TimestampedSentimentResult(SentimentResult):
     @field_validator("published_at")
     @classmethod
     def normalize_publication_time(cls, value):
-        return value.astimezone(timezone.utc) if value is not None else None
+        return normalize_utc(value) if value is not None else None
 
     @field_validator("tickers")
     @classmethod
@@ -58,7 +59,7 @@ class AggregationRequest(BaseModel):
     @field_validator("as_of")
     @classmethod
     def normalize_reference_time(cls, value):
-        return value.astimezone(timezone.utc)
+        return normalize_utc(value)
 
     @field_validator("windows")
     @classmethod

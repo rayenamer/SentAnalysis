@@ -12,7 +12,7 @@ from collections import defaultdict
 from math import fsum
 from typing import Annotated
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.aggregation import aggregate_sentiments
 from app.aggregation_models import (AggregationRequest, AggregationResponse,
@@ -22,6 +22,7 @@ SourceWeight = Annotated[float, Field(ge=0, le=100, allow_inf_nan=False)]
 
 
 class WeightingPolicy(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     source_weights: dict[str, SourceWeight] = Field(default_factory=dict, max_length=1000)
     default_source_weight: SourceWeight = 1
     engagement_factor: float = Field(default=0, ge=0, le=1, allow_inf_nan=False)
@@ -55,6 +56,7 @@ class WeightedSentimentResult(TimestampedSentimentResult):
 
 
 class WeightedAggregationRequest(AggregationRequest):
+    model_config = ConfigDict(extra="forbid")
     results: list[WeightedSentimentResult] = Field(max_length=100_000)
     weighting: WeightingPolicy = Field(default_factory=WeightingPolicy)
 

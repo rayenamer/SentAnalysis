@@ -7,6 +7,7 @@ and including aggregation_api.router there; no existing file is edited here.
 """
 
 from fastapi import APIRouter, FastAPI
+from app.validation_errors import install_validation_error_handler
 
 from app.aggregation_api import router as aggregation_router
 from app.finbert_api import app as analysis_app
@@ -29,6 +30,7 @@ def weighted(request: WeightedAggregationRequest):
 
 
 app = FastAPI(title=analysis_app.title, version=analysis_app.version)
+install_validation_error_handler(app)
 app.include_router(analysis_app.router)
 app.include_router(aggregation_router)
 app.include_router(router)
