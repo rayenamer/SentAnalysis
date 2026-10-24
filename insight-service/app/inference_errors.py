@@ -1,9 +1,4 @@
-"""Inference failures shared without importing the model/runtime stack."""
-
-
-class FinBertUnavailable(RuntimeError):
-    """FinBERT loading or inference failed; never substitute another model."""
-
-
-class ModelInitializationError(FinBertUnavailable):
-    """A global initialization failure, not a document-specific inference error."""
+"""Compatibility alias for app.helper.inference_errors."""
+import sys
+from app.helper import inference_errors as _implementation
+sys.modules[__name__] = _implementation

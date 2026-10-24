@@ -101,12 +101,12 @@ def main(argv=None):
     if args.model == "finbert":
         if not args.onnx_dir.is_dir():
             parser.error("--onnx-dir must exist")
-        from app.finbert import FinBertService, FinBertSettings
+        from app.core.sentiment.finbert import FinBertService, FinBertSettings
         service = FinBertService(FinBertSettings(onnx_dir=args.onnx_dir,
             batch_size=args.batch_size, max_length=args.max_length))
         analyze = service.analyze
     else:
-        from app.vader import analyze_documents
+        from app.core.sentiment.lexicon import analyze_documents
         analyze = analyze_documents
     report = benchmark(analyze, request, repeats=args.repeats)
     report["settings"] = {"inference_batch_size": args.batch_size if args.model == "finbert" else None,
