@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Finance</title>
+<entry><title>Microsoft results</title><link rel="self" href="https://feeds.example/entry"/>
+<link rel="alternate" href="https://example.com/article"/>
+<content type="xhtml"><div xmlns="http://www.w3.org/1999/xhtml"><p>Revenue rises.</p><p>Profit grows.</p></div></content>
+<updated>2026-10-27T12:00:00-04:00</updated></entry></feed>

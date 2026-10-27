@@ -1,0 +1,1 @@
+"""Stateless RSS ingestion service."""

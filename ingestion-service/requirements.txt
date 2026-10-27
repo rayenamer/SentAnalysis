@@ -1,0 +1,8 @@
+# Python >=3.12
+fastapi>=0.143,<1
+pydantic>=2.14,<3
+httpx>=0.28,<1
+uvicorn>=0.54,<1
+
+# Test dependencies
+pytest>=9,<10
