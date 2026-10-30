@@ -1,15 +1,42 @@
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
+import logging
+
+from app.config import Settings
+from app.core.scheduler import IngestionScheduler
+from app.helper.metrics import install_metrics, _current
 
 from app.api.ingestion import router
 from app.api.market import router as market_router
 
 
 def create_app(settings=None, http_client=None):
-    application = FastAPI(title="SentAnalysis - Ingestion Service", version="0.1.0")
+    @asynccontextmanager
+    async def lifespan(application):
+        try:
+            current_settings = settings or Settings.from_env()
+        except ValueError:
+            # Preserve existing lazy configuration errors and health availability.
+            current_settings = None
+            logging.getLogger("sentanalysis.scheduler").error("scheduler_configuration_invalid")
+        scheduler = IngestionScheduler(current_settings, http_client) if current_settings else None
+        application.state.scheduler = scheduler
+        metrics_token = _current.set(application.state.metrics)
+        try:
+            if scheduler:
+                await scheduler.start()
+            yield
+        finally:
+            if scheduler:
+                await scheduler.stop()
+            _current.reset(metrics_token)
+
+    application = FastAPI(title="SentAnalysis - Ingestion Service", version="0.1.0", lifespan=lifespan)
     application.state.settings = settings
     application.state.http_client = http_client
+    install_metrics(application)
 
     @application.exception_handler(RequestValidationError)
     async def validation_error(request: Request, exc: RequestValidationError):

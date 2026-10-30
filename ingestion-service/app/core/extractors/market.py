@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from app.helper.datetime_utils import parse_utc
 from app.helper.provider_http import SourceError, fetch_json, secret_value
+from app.helper.metrics import record
 from app.models.market import Candle, MarketDiagnostics, MarketResponse, MarketSourceResult
 
 MARKET_URL = "https://api.twelvedata.com/time_series"
@@ -102,12 +103,17 @@ async def ingest_market(settings, request, client):
         try:
             rows, diagnostics = await extractor.fetch(instrument, now, limit)
         except SourceError as exc:
+            record("provider_failures_total", "market")
+            if "timeout" in exc.code:
+                record("provider_timeouts_total", "market")
             sources.append(MarketSourceResult(ticker=instrument.ticker, provider_symbol=instrument.provider_symbol,
-                                             status="error", error_code=exc.code))
+                                             status="error", error_code=exc.code, retry_after_seconds=exc.retry_after_seconds))
             continue
         candles.extend(rows)
         sources.append(MarketSourceResult(ticker=instrument.ticker, provider_symbol=instrument.provider_symbol,
                                          status="success", diagnostics=diagnostics))
         for field in MarketDiagnostics.model_fields:
             setattr(totals, field, getattr(totals, field) + getattr(diagnostics, field))
+    record("documents_collected_total", "market", totals.collected)
+    record("documents_accepted_total", "market", len(candles))
     return MarketResponse(collected_at=now, candles=candles, sources=sources, diagnostics=totals)

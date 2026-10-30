@@ -19,3 +19,6 @@ app = FastAPI(title=existing_app.title, version=existing_app.version)
 install_validation_error_handler(app)
 app.include_router(existing_app.router)
 app.include_router(router)
+
+from app.helper.metrics import install_metrics
+install_metrics(app)

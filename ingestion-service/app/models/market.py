@@ -73,6 +73,7 @@ class MarketSourceResult(BaseModel):
     provider_symbol: str
     status: Literal["success", "error"]
     error_code: str | None = None
+    retry_after_seconds: float | None = None
     diagnostics: MarketDiagnostics = Field(default_factory=MarketDiagnostics)
 
 

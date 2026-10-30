@@ -18,6 +18,8 @@ def create_app():
     from app.helper.validation_errors import install_validation_error_handler
 
     application = FastAPI(title=app.title, version=app.version)
+    from app.helper.metrics import install_metrics
+    install_metrics(application)
     install_validation_error_handler(application)
     for router in (base_router, sentiment_router, batch_router, aggregation_router,
                    weighted_router, signals_router):

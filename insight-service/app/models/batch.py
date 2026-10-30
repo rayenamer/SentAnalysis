@@ -40,7 +40,7 @@ class DocumentOutcome(BaseModel):
 
 class BatchAnalyzeResponse(BaseModel):
     schema_version: str = "1.0"
-    model: Literal["vader", "finbert"]
+    model: Literal["vader", "finbert", "loughran_mcdonald"]
     outcomes: list[DocumentOutcome]
     success_count: int = Field(ge=0)
     error_count: int = Field(ge=0)

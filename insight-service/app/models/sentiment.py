@@ -17,7 +17,7 @@ class AnalyzeRequest(BaseModel):
         min_length=1,
         max_length=100
     )
-    model: Literal["vader", "finbert"] = "vader"
+    model: Literal["vader", "finbert", "loughran_mcdonald"] = "vader"
 
 
 class SentimentResult(BaseModel):

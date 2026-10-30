@@ -29,4 +29,5 @@ weighted_router = APIRouter()
 def weighted(request: WeightedAggregationRequest):
     return aggregate_weighted(request)
 
-
+from app.helper.metrics import install_metrics
+install_metrics(app)

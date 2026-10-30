@@ -1,0 +1,20 @@
+{
+  "source_page": "https://sraf.nd.edu/loughranmcdonald-master-dictionary/",
+  "retrieval_url": "https://docs.google.com/spreadsheets/d/1P3KtWuDyQT2Eu_VwTU3D2sEeQxR9dWCS/export?format=csv",
+  "version": "1993-2025 (March 2026 release)",
+  "retrieved_on": "2026-10-30",
+  "source_csv_sha256": "147cb24a1687ccde60363a0fa29c62be4097debcc698c01a83e51bb8a176dbb3",
+  "derived_csv_sha256": "60a9f6e98ced615c5e4f0f50a8e2a8f9af835bc755d8c75ef67091c3edab6559",
+  "rows": 3859,
+  "categories": {
+    "Positive": 347,
+    "Negative": 2345,
+    "Uncertainty": 297,
+    "Litigious": 903,
+    "Strong_Modal": 19,
+    "Weak_Modal": 27,
+    "Constraining": 184
+  },
+  "transformation": "Retain Word and seven sentiment flags, retain only rows with at least one positive flag; negative flags indicate removal, not membership.",
+  "usage": "Academic research only. Commercial use requires permission from Loughran and McDonald."
+}

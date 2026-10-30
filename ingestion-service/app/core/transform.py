@@ -57,18 +57,49 @@ def canonical_url(value: str | None) -> str | None:
         return None
 
 
-# A deliberately conservative baseline, not a general language classifier.
+# Small deterministic vocabularies, not a general language classifier.
 _WORDS = {
     "en": set("the and with from this that are was for has have will its company shares market earnings reports profits investors stocks growth revenue".split()),
     "fr": set("le la les des une un et dans pour avec est sont entreprise marché actions bénéfices revenus hausse investisseurs".split()),
     "es": set("el la los las una un y del para con es son empresa mercado acciones beneficios ingresos inversores crecimiento".split()),
 }
 
+_HEADLINE_WORDS = {
+    "en": set("quarterly annual results rises rise falls fall stocks stock earnings profits revenue shares investors company growth reports reported forecast outlook cuts beats after amid raises increased declines publishes announces surged surged yields bond bonds rates inflation bank banks".split()),
+    "fr": set("à aux du au ce cette ses sur après malgré trimestre trimestriels résultats résultat bourse boursière boursier bénéfice bénéfices chiffre affaires hausse baisse augmente augmente annonce publie prévisions taux banque banques économie croissance investisseurs marché revenus".split()),
+    "es": set("al sus por tras pese trimestre trimestrales resultados bolsa bursátil beneficio beneficios ganancias aumenta sube caen caída bajan anuncia publica previsiones tipos bancos economía crecimiento inversores mercado ingresos".split()),
+}
+_ALL_MARKERS = {code: markers | _HEADLINE_WORDS[code] for code, markers in _WORDS.items()}
+# Shared words such as "la", "un", "con" in other contexts, or "trimestre"
+# alone cannot establish a language. Only language-specific evidence votes.
+_UNIQUE_MARKERS = {
+    code: markers - set().union(*(other for language, other in _ALL_MARKERS.items() if language != code))
+    for code, markers in _ALL_MARKERS.items()
+}
+_KNOWN_LANGUAGE_WORDS = set().union(*_ALL_MARKERS.values())
+_LANGUAGE_TOKENS = re.compile(r"[^\W\d_]+")
+_NON_LANGUAGE = re.compile(r"https?://\S+|\$[A-Za-z][A-Za-z0-9.\-]*", re.IGNORECASE)
+
 
 def detect_language(text: str) -> str:
-    words = re.findall(r"[^\W\d_]+", text.casefold())
-    if len(words) < 12:
+    """Identify en/fr/es from distinct lexical evidence, otherwise return und.
+
+    Require three tokens and two distinct exclusive markers with a margin of
+    two. Comparable evidence for another language means mixed/uncertain text.
+    No translation, probabilistic confidence, model loading or network access.
+    """
+    normalized = unicodedata.normalize("NFC", text).casefold()
+    words = _LANGUAGE_TOKENS.findall(_NON_LANGUAGE.sub(" ", normalized))
+    if len(words) < 3:
         return "und"
-    scores = sorted(((len(set(words) & markers), code) for code, markers in _WORDS.items()), reverse=True)
+    unique = set(words)
+    scores = sorted(((len(unique & markers), code) for code, markers in _UNIQUE_MARKERS.items()), reverse=True)
     best, code = scores[0]
-    return code if best >= 5 and best >= scores[1][0] + 3 else "und"
+    runner_up = scores[1][0]
+    if best < 2 or best - runner_up < 2 or (runner_up >= 2 and runner_up >= best * 0.45):
+        return "und"
+    # Isolated familiar words inside predominantly unknown text are unreliable.
+    known = len(unique & _KNOWN_LANGUAGE_WORDS)
+    if known / len(unique) < 0.2:
+        return "und"
+    return code

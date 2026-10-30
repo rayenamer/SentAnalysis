@@ -24,3 +24,6 @@ pytorch_model.bin
 
 # Temporary files
 *.log
+
+/ingestion-service/test-temp/
+/insight-service/test-temp/

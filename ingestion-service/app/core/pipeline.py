@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from app.helper.metrics import record
 
 from app.core.deduplication import Deduplicator, content_hash
 from app.core.extractors.news import RSSExtractor, SourceError
@@ -8,7 +9,7 @@ from app.helper.datetime_utils import parse_utc
 from app.models.ingestion import Diagnostics, Document, IngestResponse, SourceResult
 from app.config import FeedSource
 from app.core.extractors.news_providers import NewsExtractor, NEWSAPI_URL, GDELT_URL
-from app.core.extractors.reddit import RedditExtractor, OAUTH_URL
+from app.core.extractors.hackernews import HackerNewsExtractor, HACKERNEWS_URL
 
 
 async def ingest(settings, request, client):
@@ -18,10 +19,8 @@ async def ingest(settings, request, client):
     for provider, endpoint in [("newsapi", NEWSAPI_URL), ("gdelt", GDELT_URL)]:
         if provider in request.providers:
             jobs.append((FeedSource(name=provider, url=endpoint), NewsExtractor(client, settings, provider)))
-    if "reddit" in request.providers:
-        reddit = RedditExtractor(client, settings)
-        jobs.extend((FeedSource(name="reddit:" + name, url=f"{OAUTH_URL}/r/{name}/new"), reddit)
-                    for name in settings.reddit.subreddits)
+    if "hackernews" in request.providers:
+        jobs.append((FeedSource(name="hackernews", url=HACKERNEWS_URL), HackerNewsExtractor(client, settings)))
     sources = [s for s, _ in jobs]
     if request.source_names is not None:
         names = set(request.source_names)
@@ -38,10 +37,16 @@ async def ingest(settings, request, client):
         try:
             records, truncated = await extractor.fetch(source)
         except SourceError as exc:
-            results.append(SourceResult(name=source.name, url=source.url, status="error", error_code=exc.code))
+            provider = "rss" if isinstance(extractor, RSSExtractor) else source.name
+            record("provider_failures_total", provider)
+            if "timeout" in exc.code:
+                record("provider_timeouts_total", provider)
+            results.append(SourceResult(name=source.name, url=source.url, status="error", error_code=exc.code,
+                                        retry_after_seconds=exc.retry_after_seconds))
             continue
         results.append(SourceResult(name=source.name, url=source.url, status="success", collected=len(records), entries_truncated=truncated))
         diagnostics.collected += len(records)
+        record("documents_collected_total", "rss" if isinstance(extractor, RSSExtractor) else source.name, len(records))
         for raw in records:
             title, text = clean_text(raw.title), clean_text(raw.text)
             if not title or not text:
@@ -62,4 +67,5 @@ async def ingest(settings, request, client):
                                       source=source.name, original_url=raw.url, canonical_url=url, collected_at=now, published_at=published,
                                       metadata=raw.metadata))
     diagnostics.returned = len(documents)
+    record("documents_accepted_total", "news", len(documents))
     return IngestResponse(collected_at=now, documents=documents, sources=results, diagnostics=diagnostics)

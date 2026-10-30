@@ -7,7 +7,7 @@ class IngestRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     source_names: list[str] | None = Field(default=None, min_length=1, max_length=20)
     max_documents: int | None = Field(default=None, ge=1, le=100, strict=True)
-    providers: list[Literal["rss", "newsapi", "gdelt", "reddit"]] = Field(default_factory=lambda: ["rss"], min_length=1, max_length=4)
+    providers: list[Literal["rss", "newsapi", "gdelt", "hackernews"]] = Field(default_factory=lambda: ["rss"], min_length=1, max_length=4)
 
 
 class Document(BaseModel):
@@ -31,6 +31,7 @@ class SourceResult(BaseModel):
     collected: int = 0
     entries_truncated: bool = False
     error_code: str | None = None
+    retry_after_seconds: float | None = None
 
 
 class Diagnostics(BaseModel):

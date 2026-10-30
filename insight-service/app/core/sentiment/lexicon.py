@@ -6,6 +6,7 @@ from typing import Literal
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from app.models.sentiment import AnalyzeRequest, AnalyzeResponse, SentimentResult
+from app.helper.metrics import measure_model
 
 
 def classify_compound(score: float) -> Literal["positive", "neutral", "negative"]:
@@ -23,6 +24,7 @@ def get_analyzer() -> SentimentIntensityAnalyzer:
     return SentimentIntensityAnalyzer()
 
 
+@measure_model("vader")
 def analyze_documents(request: AnalyzeRequest) -> AnalyzeResponse:
     """Score document bodies in input order, preserving IDs and tickers.
 

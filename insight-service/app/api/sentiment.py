@@ -17,6 +17,12 @@ router = APIRouter()
 
 @router.post("/analyze", response_model=FinBertResponse | AnalyzeResponse)
 def analyze(request: AnalyzeRequest):
+    if request.model == "loughran_mcdonald":
+        from app.core.sentiment.loughran_mcdonald import analyze_documents as analyze_financial
+        try:
+            return analyze_financial(request)
+        except (OSError, ValueError):
+            raise HTTPException(status_code=503, detail="Financial dictionary is unavailable") from None
     if request.model == "vader":
         return analyze_documents(request)
     try:
@@ -32,3 +38,6 @@ app.include_router(existing_app.router)
 
 
 app.post("/analyze", response_model=FinBertResponse | AnalyzeResponse)(analyze)
+
+from app.helper.metrics import install_metrics
+install_metrics(app)

@@ -23,3 +23,6 @@ app.include_router(existing_app.router)
 
 
 app.post("/analyze", response_model=AnalyzeResponse)(analyze)
+
+from app.helper.metrics import install_metrics
+install_metrics(app)

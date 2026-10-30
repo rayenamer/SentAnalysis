@@ -17,6 +17,7 @@ import numpy as np
 from app.models.finbert import FinBertResponse, FinBertResult, SentimentProbabilities
 from app.helper.inference_errors import FinBertUnavailable, ModelInitializationError
 from app.models.sentiment import AnalyzeRequest
+from app.helper.metrics import measure_model
 
 MODEL_ID = "ProsusAI/finbert"
 CPU_PROVIDER = "CPUExecutionProvider"
@@ -117,6 +118,7 @@ class FinBertService:
         self._backend = None
         self._lock = Lock()
 
+    @measure_model("finbert")
     def analyze(self, request: AnalyzeRequest) -> FinBertResponse:
         if request.model != "finbert":
             raise ValueError("FinBERT service requires model='finbert'")

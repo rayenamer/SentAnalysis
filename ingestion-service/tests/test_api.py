@@ -15,9 +15,12 @@ def test_health_and_openapi():
     with TestClient(create_app()) as client:
         assert client.get("/health").json() == {"status": "ok", "service": "ingestion-service"}
         schema = client.get("/openapi.json").json()
-        assert set(schema["paths"]) == {"/health", "/ingest/run", "/ingest/market"}
+        assert set(schema["paths"]) == {"/health", "/ingest/run", "/ingest/market", "/ingest/analyze"}
         assert schema["components"]["schemas"]["IngestRequest"]["additionalProperties"] is False
         assert "Document" in schema["components"]["schemas"]
+        assert set(schema["components"]["schemas"]["IngestRequest"]["properties"]["providers"]["items"]["enum"]) == {
+            "rss", "newsapi", "gdelt", "hackernews"
+        }
 
 
 def test_valid_ingestion(client_factory, rss):

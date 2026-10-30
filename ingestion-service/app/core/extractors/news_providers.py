@@ -30,8 +30,8 @@ class NewsExtractor:
                                            max_bytes=self.settings.max_response_bytes,
                                            params={"query": "(" + config.query + ")", "mode": "artlist", "format": "json",
                                                    "maxrecords": limit, "timespan": config.timespan, "sort": "datedesc"})
-        except SourceError as exc:
-            raise SourceError(exc.code) from exc
+        except SourceError:
+            raise
         articles = payload.get("articles")
         if not isinstance(articles, list):
             raise SourceError("invalid_response")

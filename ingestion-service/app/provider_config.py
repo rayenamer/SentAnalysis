@@ -50,27 +50,26 @@ class GDELTConfig(SearchConfig):
         return value
 
 
-class RedditConfig(ProviderConfig):
-    client_id: SecretStr | None = Field(default=None, repr=False)
-    client_secret: SecretStr | None = Field(default=None, repr=False)
-    user_agent: str = Field(default="SentAnalysis/0.2 (configured operator required)", min_length=10, max_length=200)
-    subreddits: list[str] = Field(default_factory=lambda: ["stocks", "investing", "wallstreetbets", "cryptocurrency"], min_length=1, max_length=10)
-    page_size: int = Field(default=25, ge=1, le=100)
-    max_pages: int = Field(default=2, ge=1, le=5)
 
-    @field_validator("user_agent")
-    @classmethod
-    def header_safe(cls, value):
-        if any(ord(c) < 32 or ord(c) > 126 for c in value):
-            raise ValueError("user agent must be printable ASCII")
-        return value
+class HackerNewsConfig(ProviderConfig):
+    """Public Algolia search: one bounded query per configured keyword."""
+    keywords: list[str] = Field(default_factory=lambda: ["Apple", "Microsoft", "Tesla", "Nvidia", "Bitcoin"], min_length=1, max_length=10)
+    hits_per_page: int = Field(default=10, ge=1, le=100)
+    max_pages: int = Field(default=1, ge=1, le=5)
+    max_records: int = Field(default=50, ge=1, le=1000)
 
-    @field_validator("subreddits")
+    @field_validator("keywords")
     @classmethod
-    def valid_subreddits(cls, values):
-        if any(not re.fullmatch(r"[A-Za-z0-9_]{2,30}", value) for value in values):
-            raise ValueError("invalid subreddit name")
-        return list(dict.fromkeys(value.lower() for value in values))
+    def valid_keywords(cls, values):
+        seen, result = set(), []
+        for value in values:
+            value = value.strip()
+            if not value or len(value) > 80 or any(ord(c) < 32 for c in value):
+                raise ValueError("keywords must contain 1–80 characters without control characters")
+            if value.casefold() not in seen:
+                result.append(value)
+                seen.add(value.casefold())
+        return result
 
 
 class Instrument(BaseModel):

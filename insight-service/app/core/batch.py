@@ -23,6 +23,12 @@ class InferenceContractError(ValueError):
 
 
 def _run_model(request: AnalyzeRequest):
+    if request.model == "loughran_mcdonald":
+        from app.core.sentiment.loughran_mcdonald import analyze_documents
+        try:
+            return analyze_documents(request)
+        except (OSError, ValueError) as exc:
+            raise ModelInitializationError("Financial dictionary unavailable") from exc
     if request.model == "vader":
         from app.core.sentiment.lexicon import analyze_documents
         return analyze_documents(request)
@@ -97,5 +103,8 @@ def analyze_batch(request: BatchAnalyzeRequest, *, runner=None) -> BatchAnalyzeR
     for start in range(0, len(request.documents), request.chunk_size):
         attempt(request.documents[start:start + request.chunk_size], start)
     successes = sum(outcome.status == "success" for outcome in outcomes)
+    if successes != len(outcomes):
+        from app.helper.metrics import record
+        record("batch_failures_total", "failed")
     return BatchAnalyzeResponse(model=request.model, outcomes=outcomes,
                                 success_count=successes, error_count=len(outcomes) - successes)

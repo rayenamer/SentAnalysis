@@ -4,7 +4,8 @@ import os
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from app.provider_config import NewsAPIConfig, GDELTConfig, RedditConfig, MarketConfig
+from app.provider_config import NewsAPIConfig, GDELTConfig, MarketConfig, HackerNewsConfig
+from app.integration_config import InsightConfig, SchedulerConfig
 
 
 class FeedSource(BaseModel):
@@ -32,8 +33,10 @@ class Settings(BaseModel):
     company_tickers: dict[str, str] = Field(default_factory=dict)
     newsapi: NewsAPIConfig = Field(default_factory=NewsAPIConfig)
     gdelt: GDELTConfig = Field(default_factory=GDELTConfig)
-    reddit: RedditConfig = Field(default_factory=RedditConfig)
+    hackernews: HackerNewsConfig = Field(default_factory=HackerNewsConfig)
     market: MarketConfig = Field(default_factory=MarketConfig)
+    insight: InsightConfig = Field(default_factory=InsightConfig)
+    scheduler: SchedulerConfig = Field(default_factory=SchedulerConfig)
 
     @field_validator("sources")
     @classmethod
@@ -54,13 +57,14 @@ class Settings(BaseModel):
     def from_env(cls):
         values = {}
         for name in cls.model_fields:
-            if name in {"newsapi", "gdelt", "reddit", "market"}:
+            if name in {"newsapi", "gdelt", "hackernews", "market", "insight", "scheduler"}:
                 provider = cls.model_fields[name].annotation
                 nested = {}
                 for field in provider.model_fields:
-                    raw = os.getenv(f"INGESTION_{name.upper()}_{field.upper()}")
+                    prefix = "INSIGHT_" if name == "insight" else f"INGESTION_{name.upper()}_"
+                    raw = os.getenv(prefix + field.upper())
                     if raw is not None:
-                        nested[field] = json.loads(raw) if field in {"keywords", "tickers", "subreddits", "instruments"} else raw
+                        nested[field] = json.loads(raw) if field in {"keywords", "tickers", "instruments", "providers"} else raw
                 values[name] = nested
                 continue
             raw = os.getenv("INGESTION_" + name.upper())

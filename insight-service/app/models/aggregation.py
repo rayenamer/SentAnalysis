@@ -14,7 +14,7 @@ from app.models.sentiment import SentimentResult
 from app.helper.datetime_utils import normalize_utc
 
 Window = Literal["1h", "24h", "7d"]
-ScoringModel = Literal["vader", "finbert"]
+ScoringModel = Literal["vader", "finbert", "loughran_mcdonald"]
 WINDOW_DURATIONS = {"1h": timedelta(hours=1), "24h": timedelta(hours=24),
                     "7d": timedelta(days=7)}
 NonEmptyString = Annotated[str, Field(min_length=1)]

@@ -25,6 +25,8 @@ def validate_analysis(request: AnalyzeRequest):
 
 
 app = FastAPI(title="SentAnalysis - Insight Service", version="0.1.0")
+from app.helper.metrics import install_metrics
+install_metrics(app)
 install_validation_error_handler(app)
 app.get("/health")(health)
 app.post("/analyze/validate")(validate_analysis)
